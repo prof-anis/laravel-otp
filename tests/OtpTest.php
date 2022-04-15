@@ -37,7 +37,7 @@ class OtpTest extends TestCase
     {
         $otp = Otp::identifier("tobexkee@gmail.com")
             ->type('email')
-            ->expireAt(now()->addSeconds(500))
+            ->expireAt(now()->addMinutes(500))
             ->purpose('forgot-password')
             ->generate();
 
@@ -71,5 +71,16 @@ class OtpTest extends TestCase
             ->generate();
 
         $this->assertTrue($newOtp instanceof LaravelOtp);
+    }
+
+    public function test_it_will_verify_generated_otp()
+    {
+        $otp = Otp::identifier("tobexkee@gmail.com")
+            ->type('email')
+            ->expireAt(now()->addSeconds(500))
+            ->purpose('forgot-password')
+            ->generate();
+
+        $this->assertTrue(Otp::verify($otp->code, "tobexkee@gmail.com", "email", "forgot-password"));
     }
 }

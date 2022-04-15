@@ -7,22 +7,25 @@ use Tobexkee\LaravelOtp\Enums\OtpStatus;
 use Tobexkee\LaravelOtp\Events\OtpGeneratedEvent;
 use Tobexkee\LaravelOtp\Interfaces\OtpInterface;
 use Tobexkee\LaravelOtp\Models\LaravelOtp;
+use Carbon\Carbon as LegacyCarbon;
 
 class OtpService implements OtpInterface
 {
-    private string $identifier;
+    protected ?string $expire = null;
 
-    private string $purpose;
+    protected string $identifier;
 
-    private string|array $type;
+    protected string $purpose;
 
-    private string $code = "";
+    protected string|array $type;
 
-    private int $delay;
+    protected string $code = "";
 
-    private string $status = "";
+    protected int $delay;
 
-    private LaravelOtp $otp;
+    protected string $status = "";
+
+    protected LaravelOtp $otp;
 
     public function type(string|array $type): static
     {
@@ -84,9 +87,13 @@ class OtpService implements OtpInterface
         return $this->type;
     }
 
-    public function expireAt(int|Carbon $expire)
+    public function expireAt(int|Carbon|LegacyCarbon $expire): LaravelOtp
     {
-        $this->expire = $expire;
+        if ($expire instanceof Carbon || $expire instanceof LegacyCarbon) {
+            $this->expire = $expire->toDateTimeString();
+        } else {
+            $this->expire = now()->addSeconds($expire)->toDateTimeString();
+        }
 
         return $this;
     }
@@ -121,7 +128,7 @@ class OtpService implements OtpInterface
         return $this->status;
     }
 
-    private function removeExisitingOtp($type, $identifier, $purpose): void
+    protected function removeExisitingOtp($type, $identifier, $purpose): void
     {
         LaravelOtp::where('type', $type)
             ->where('identifier', $identifier)
@@ -149,12 +156,12 @@ class OtpService implements OtpInterface
         return true;
     }
 
-    private function dispatchOtpEvents(LaravelOtp $otp)
+    protected function dispatchOtpEvents(LaravelOtp $otp): void
     {
         OtpGeneratedEvent::dispatch($otp);
     }
 
-    private function createNewOtp(string $identifier, string $type, string $code, string $purpose): LaravelOtp
+    protected function createNewOtp(string $identifier, string $type, string $code, string $purpose): LaravelOtp
     {
         return $this->otp = LaravelOtp::create([
             'identifier' => $identifier,
@@ -166,15 +173,9 @@ class OtpService implements OtpInterface
         ]);
     }
 
-    protected function getExpiryTime()
+    protected function getExpiryTime(): string
     {
-        if (!$this->expire) {
-            return now()->addSeconds(config('laravel-otp::otp_validity_duration'));
-        }
-
-        return $this->expire instanceof Carbon
-            ? $this->expire
-            : Carbon::now()->addSeconds($this->expire);
+        return $this->expire ?:  now()->addSeconds(config('laravel-otp::otp_validity_duration'))->toDateTimeString();
     }
 
     public function verify(string $code, string $identifier, string $type, string $purpose): bool
@@ -211,6 +212,4 @@ class OtpService implements OtpInterface
     {
         return call_user_func($callable);
     }
-
-
 }
