@@ -87,7 +87,7 @@ class OtpService implements OtpInterface
         return $this->type;
     }
 
-    public function expireAt(int|Carbon|LegacyCarbon $expire): LaravelOtp
+    public function expireAt(int|Carbon|LegacyCarbon $expire): OtpService
     {
         if ($expire instanceof Carbon || $expire instanceof LegacyCarbon) {
             $this->expire = $expire->toDateTimeString();
@@ -98,27 +98,22 @@ class OtpService implements OtpInterface
         return $this;
     }
 
-    public function generate(
-        ?string $identifier = null,
-        ?string $type = null,
-        ?string $purpose = null,
-        ?string $code = null
-    ): bool | LaravelOtp
+    public function generate(): bool | LaravelOtp
     {
+        throw_if(
+            !$this->identifier || !$this->type || !$this->purpose,
+            new \Exception("You need to supply the identifier, type and purpose.")
+        );
 
-        $identifier = $identifier ?: $this->identifier;
-        $type = $type ?: $this->type;
-        $purpose = $purpose ?: $this->purpose;
-
-        if (! $this->authorize($identifier, $type, $purpose)) {
+        if (! $this->authorize($this->identifier, $this->type, $this->purpose)) {
             return false;
         }
 
-        $this->removeExisitingOtp($type, $identifier, $purpose);
+        $this->removeExisitingOtp($this->type, $this->identifier, $this->purpose);
 
-        $code = (new CodeGenerator($code ?: $this->code))->generate();
+        $code = (new CodeGenerator)->generate($this->code);
 
-        $this->dispatchOtpEvents($otp = $this->createNewOtp($identifier, $type, $code, $purpose));
+        $this->dispatchOtpEvents($otp = $this->createNewOtp($this->identifier, $this->type, $code, $this->purpose));
 
         return $otp;
     }
@@ -175,7 +170,7 @@ class OtpService implements OtpInterface
 
     protected function getExpiryTime(): string
     {
-        return $this->expire ?:  now()->addSeconds(config('laravel-otp::otp_validity_duration'))->toDateTimeString();
+        return $this->expire ?:  now()->addSeconds(config('laravel-otp.otp_validity_duration'))->toDateTimeString();
     }
 
     public function verify(string $code, string $identifier, string $type, string $purpose): bool
@@ -206,10 +201,5 @@ class OtpService implements OtpInterface
         }
 
         return true;
-    }
-
-    public function generateCodeUsing(callable $callable)
-    {
-        return call_user_func($callable);
     }
 }

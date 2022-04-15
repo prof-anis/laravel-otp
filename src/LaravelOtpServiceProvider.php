@@ -12,6 +12,8 @@ class LaravelOtpServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        $this->app->singleton(OtpInterface::class, OtpService::class);
+
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->mergeConfigFrom(__DIR__."/../config/laravel-otp.php", 'laravel-otp');
     }

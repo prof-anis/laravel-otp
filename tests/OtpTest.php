@@ -83,4 +83,37 @@ class OtpTest extends TestCase
 
         $this->assertTrue(Otp::verify($otp->code, "tobexkee@gmail.com", "email", "forgot-password"));
     }
+
+    public function test_it_will_generate_number_of_characters_specified_in_config()
+    {
+        config(['laravel-otp.number_of_otp_characters' => 10]);
+
+        $otp = Otp::identifier("tobexkee@gmail.com")
+            ->type('email')
+            ->expireAt(now()->addSeconds(500))
+            ->purpose('forgot-password')
+            ->generate();
+
+        $this->assertSame(strlen($otp->code), 10);
+    }
+
+    public function test_it_will_generate_otp_using_custom_otp_generation_class()
+    {
+        $customClass = new class {
+          public static function generate() {
+              return "anis";
+          }
+
+        };
+
+        config(['laravel-otp.algo' =>  get_class($customClass)]);
+
+        $otp = Otp::identifier("tobexkee@gmail.com")
+            ->type('email')
+            ->expireAt(now()->addSeconds(500))
+            ->purpose('forgot-password')
+            ->generate();
+
+        $this->assertSame($otp->code, "anis");
+    }
 }
