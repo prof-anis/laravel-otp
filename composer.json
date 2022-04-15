@@ -1,5 +1,11 @@
 {
     "name": "tobexkee/laravel-otp",
+    "authors": [
+        {
+            "name": "Tobexkee",
+            "email": "tobexkee@gmail.com"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Tobexkee\\LaravelOtp\\": "src/",
