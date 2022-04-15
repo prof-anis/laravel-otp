@@ -1,5 +1,17 @@
 {
     "name": "tobexkee/laravel-otp",
+    "keywords": [
+        "tobexkee",
+        "laravel",
+        "otp"
+    ],
+    "homepage": "https://github.com/prof-anis/laravel-otp",
+    "license": "MIT",
+    "type": "library",
+    "support": {
+        "issues": "https://github.com/prof-anis/laravel-otp/issues",
+        "source": "https://github.com/prof-anis/laravel-otp"
+    },
     "authors": [
         {
             "name": "Tobexkee",
@@ -8,11 +20,23 @@
     ],
     "autoload": {
         "psr-4": {
-            "Tobexkee\\LaravelOtp\\": "src/",
+            "Tobexkee\\LaravelOtp\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "Tobexkee\\LaravelOtp\\Tests\\": "tests/"
         }
     },
     "require-dev": {
-        "orchestra/testbench": "^7.2"
+        "orchestra/testbench": "^7.2",
+        "phpunit/phpunit": "^8.0|^9.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Tobexkee\\LaravelOtp\\LaravelOtpServiceProvider"
+            ]
+        }
     }
 }
